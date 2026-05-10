@@ -1,4 +1,8 @@
 package com.dlqanalyzer.dlq_analyzer.model;
 
-public class MessageStatus {
+public enum MessageStatus {
+    PENDING,
+    REPLAYED,
+    DISCARDED
+
 }
