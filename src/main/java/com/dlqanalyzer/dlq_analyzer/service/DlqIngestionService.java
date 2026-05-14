@@ -19,6 +19,8 @@ public class DlqIngestionService {
     private final List<BrokerAdapter> adapters;
     private final DlqMessageRepository dlqMessageRepository;
 
+    private final ErrorClassifier errorClassifier;
+
     @Scheduled(fixedDelayString = "${dlp.polling.interval-ms:30000}")
     public void poll(){
         log.info("DLQ polling Started...");
@@ -29,6 +31,8 @@ public class DlqIngestionService {
                     List<DlqMessage> messages = adapter.pollMessage(destination, 100);
                     for (DlqMessage message: messages){
                         if(!dlqMessageRepository.existsByMessageId(message.getMessageId())){
+                            String groupKey = errorClassifier.classify(message);
+                            message.setGroupKey(groupKey);
                             dlqMessageRepository.save(message);
                             log.info("Saved new DLQ message from {}", destination);
                         }
