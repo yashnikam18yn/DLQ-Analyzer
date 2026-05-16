@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,6 +14,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class DlqMessage {
+
     @Id
     @Column(length = 36)
     private String id;
@@ -27,12 +27,12 @@ public class DlqMessage {
     private BrokerType brokerType;
 
     @Column(name = "source_destination", nullable = false)
-    private String SourceDestination;
+    private String sourceDestination;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String payload;
 
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String headers;
 
     @Column(name = "error_class")
@@ -63,10 +63,19 @@ public class DlqMessage {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public void prePersist(){
-        if(id == null) id = UUID.randomUUID().toString();
-        if(createdAt == null) createdAt = LocalDateTime.now();
-        if(status == null) status = MessageStatus.PENDING;
-    }
+    @PrePersist
+    public void prePersist() {
 
+        if (id == null) {
+            id = UUID.randomUUID().toString();
+        }
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+
+        if (status == null) {
+            status = MessageStatus.PENDING;
+        }
+    }
 }

@@ -2,6 +2,7 @@ package com.dlqanalyzer.dlq_analyzer.service;
 
 import com.dlqanalyzer.dlq_analyzer.adapter.BrokerAdapter;
 import com.dlqanalyzer.dlq_analyzer.model.DlqMessage;
+import com.dlqanalyzer.dlq_analyzer.model.MessageStatus;
 import com.dlqanalyzer.dlq_analyzer.repository.DlqMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,8 @@ public class DlqIngestionService {
 
     private final ErrorClassifier errorClassifier;
 
+    private final WebSocketService webSocketService;
+
     @Scheduled(fixedDelayString = "${dlp.polling.interval-ms:30000}")
     public void poll(){
         log.info("DLQ polling Started...");
@@ -36,6 +39,10 @@ public class DlqIngestionService {
                             dlqMessageRepository.save(message);
                             log.info("Saved new DLQ message from {}", destination);
                         }
+                        //after loop ends inform to the websocket
+                        long totalPending = dlqMessageRepository.findByStatus(
+                                MessageStatus.PENDING).size();
+                        webSocketService.notifyNewMessages(totalPending);
                     }
                 }catch (Exception e){
                     log.error("Error polling destination {}: {}", destination, e.getMessage());
